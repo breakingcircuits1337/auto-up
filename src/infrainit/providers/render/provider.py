@@ -19,7 +19,6 @@ class RenderProvider(Provider):
 
     def provision(self, plan: dict) -> ProvisionResult:
         repo = plan.get("repo", "")
-        port = plan.get("port", 80)
         name = repo.split("/")[-1].replace(".git", "")
         region = plan.get("constraints", {}).get("region", "oregon")
         language = plan.get("language", "python")
@@ -56,8 +55,11 @@ class RenderProvider(Provider):
         )
 
     def verify(self, result: ProvisionResult) -> bool:
+        ep = result.endpoint
+        if not ep:
+            return False
         try:
-            r = httpx.get(result.endpoint, timeout=30)
+            r = httpx.get(ep, timeout=30)
             return r.is_success
         except Exception:
             return False

@@ -1,7 +1,6 @@
 import subprocess
 import tempfile
 from datetime import datetime
-from pathlib import Path
 from infrainit.providers import Provider, ProvisionResult
 from infrainit.core.verifier import verify_result
 from infrainit.config.config import set_app_state

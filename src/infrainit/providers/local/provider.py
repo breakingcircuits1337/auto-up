@@ -31,10 +31,12 @@ class LocalProvider(Provider):
         )
 
     def verify(self, result: ProvisionResult) -> bool:
+        ep = result.endpoint
+        if not ep:
+            return False
         try:
             r = subprocess.run(
-                ["curl", "-sf", result.endpoint],
-                capture_output=True, timeout=10,
+                ["curl", "-sf", ep], capture_output=True, timeout=10,
             )
             return r.returncode == 0
         except Exception:
@@ -56,11 +58,11 @@ class LocalProvider(Provider):
         for dep in plan.get("stack", []):
             dep_lower = dep.lower()
             if "postgres" in dep_lower or "postgresql" in dep_lower:
-                services["db"] = {"image": "postgres:16", "environment": {"POSTGRES_PASSWORD": "infrainit"}, "ports": ["5432:5432"]}
+                services["db"] = {"image": "postgres:16", "environment": {"POSTGRES_PASSWORD": "infrainit"}, "ports": ["5432:5432"]}  # type: ignore[dict-item]
             elif "redis" in dep_lower:
                 services["redis"] = {"image": "redis:7", "ports": ["6379:6379"]}
             elif "mysql" in dep_lower or "mariadb" in dep_lower:
-                services["db"] = {"image": "mariadb:11", "environment": {"MYSQL_ROOT_PASSWORD": "infrainit"}, "ports": ["3306:3306"]}
+                services["db"] = {"image": "mariadb:11", "environment": {"MYSQL_ROOT_PASSWORD": "infrainit"}, "ports": ["3306:3306"]}  # type: ignore[dict-item]
             elif "mongo" in dep_lower:
                 services["mongo"] = {"image": "mongo:7", "ports": ["27017:27017"]}
 

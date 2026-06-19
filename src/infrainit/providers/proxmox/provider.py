@@ -57,8 +57,11 @@ class ProxmoxProvider(Provider):
         )
 
     def verify(self, result: ProvisionResult) -> bool:
+        ep = result.endpoint
+        if not ep:
+            return False
         try:
-            r = httpx.get(result.endpoint, timeout=10)
+            r = httpx.get(ep, timeout=10)
             return r.is_success
         except Exception:
             return False

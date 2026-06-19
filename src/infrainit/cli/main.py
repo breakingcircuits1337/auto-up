@@ -12,12 +12,20 @@ from infrainit.providers.render.provider import RenderProvider
 from infrainit.providers.gcp.provider import GCPProvider
 
 console = Console()
-PROVIDERS: dict[str, type[Provider]] = {
+ProviderClass = type[LocalProvider] | type[ProxmoxProvider] | type[AzureProvider] | type[RenderProvider] | type[GCPProvider]
+PROVIDERS: dict[str, ProviderClass] = {
     "1": LocalProvider,
     "2": ProxmoxProvider,
     "3": AzureProvider,
     "4": RenderProvider,
     "5": GCPProvider,
+}
+NAME_TO_PROVIDER: dict[str, ProviderClass] = {
+    "local": LocalProvider,
+    "proxmox": ProxmoxProvider,
+    "azure": AzureProvider,
+    "render": RenderProvider,
+    "gcp": GCPProvider,
 }
 
 
@@ -39,8 +47,8 @@ def _gather_constraints(target: str) -> dict:
     if target == "proxmox":
         constraints["node"] = Prompt.ask("  Proxmox node", default="pve1")
         constraints["vm_id"] = Prompt.ask("  VM ID (or 'auto')", default="auto")
-        constraints["ram_gb"] = IntPrompt.ask("  RAM (GB)", default=2)
-        constraints["disk_gb"] = IntPrompt.ask("  Disk (GB)", default=20)
+        constraints["ram_gb"] = str(IntPrompt.ask("  RAM (GB)", default=2))
+        constraints["disk_gb"] = str(IntPrompt.ask("  Disk (GB)", default=20))
     elif target == "azure":
         constraints["location"] = Prompt.ask("  Azure region", default="eastus")
         constraints["vm_size"] = Prompt.ask("  VM size", default="Standard_B1s")
@@ -64,17 +72,11 @@ def setup(repo: str, target: str | None, fallback: bool):
     if not target:
         target, provider = _pick_target()
     else:
-        provider = {
-            "local": LocalProvider,
-            "proxmox": ProxmoxProvider,
-            "azure": AzureProvider,
-            "render": RenderProvider,
-            "gcp": GCPProvider,
-        }[target]()
+        provider = NAME_TO_PROVIDER[target]()
 
     constraints = _gather_constraints(target)
 
-    with console.status("[bold]GPT-5.5 analyzing repo...") as status:
+    with console.status("[bold]GPT-5.5 analyzing repo..."):
         planner = Planner(use_fallback=fallback)
         plan = planner.plan(repo, target, constraints)
     console.print(f"[green]Detected:[/] {plan.get('language', 'unknown')} — {', '.join(plan.get('stack', []))}")
@@ -112,13 +114,7 @@ def destroy(name: str):
         console.print(f"[red]No state found for '{name}'[/]")
         raise SystemExit(1)
 
-    provider_cls = {
-        "local": LocalProvider,
-        "proxmox": ProxmoxProvider,
-        "azure": AzureProvider,
-        "render": RenderProvider,
-        "gcp": GCPProvider,
-    }.get(state["provider"])
+    provider_cls = NAME_TO_PROVIDER.get(state["provider"])
 
     if provider_cls:
         provider = provider_cls()
