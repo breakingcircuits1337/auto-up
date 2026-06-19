@@ -1,6 +1,7 @@
-import subprocess
 import json
+import subprocess
 import time
+import httpx
 from infrainit.providers import Provider, ProvisionResult
 from infrainit.config.config import require_env
 
@@ -21,7 +22,7 @@ class GCPProvider(Provider):
             f"compute instances create {name} "
             f"--zone={zone} --machine-type={machine} "
             f"--image-family=ubuntu-2404-lts --image-project=ubuntu-os-cloud "
-            f"--tags=http-server,https-server"
+            f"--tags=http-server"
         )
 
         self._gcloud(
@@ -45,7 +46,6 @@ class GCPProvider(Provider):
 
     def verify(self, result: ProvisionResult) -> bool:
         try:
-            import httpx
             r = httpx.get(result.endpoint, timeout=10)
             return r.is_success
         except Exception:
@@ -54,7 +54,6 @@ class GCPProvider(Provider):
     def destroy(self, result: ProvisionResult) -> None:
         name = result.metadata["instance_name"]
         zone = result.metadata["zone"]
-        project = require_env("GCP_PROJECT_ID")
         self._gcloud(f"compute instances delete {name} --zone={zone} --quiet")
         self._gcloud(f"compute firewall-rules delete allow-{name} --quiet")
 

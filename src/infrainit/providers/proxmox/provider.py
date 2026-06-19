@@ -1,4 +1,3 @@
-import subprocess
 import time
 import httpx
 from infrainit.providers import Provider, ProvisionResult
@@ -37,9 +36,9 @@ class ProxmoxProvider(Provider):
                 "memory": ram,
                 "cores": 2,
                 "net0": "virtio,bridge=vmbr0",
-                "virtio0": f"{'local-lvm'}:{disk}",
+                "virtio0": f"local-lvm:{disk}",
                 "ostype": "l26",
-                "ide2": f"{'local'}:iso/{image},media=cdrom",
+                "ide2": f"local:iso/{image},media=cdrom",
                 "ciuser": "infrainit",
                 "sshkeys": require_env("PROXMOX_SSH_PUBKEY"),
                 "agent": 1,
@@ -94,7 +93,7 @@ class ProxmoxProvider(Provider):
                 for iface in resp.json()["data"]["result"]:
                     for addr in iface.get("ip-addresses", []):
                         ip = addr.get("ip-address", "")
-                        if ip.startswith("192.168.") or ip.startswith("10."):
+                        if ip.startswith(("192.168.", "10.", "172.")):
                             return ip
             except Exception:
                 pass

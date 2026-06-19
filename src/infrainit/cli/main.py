@@ -1,10 +1,10 @@
 import click
 from rich.console import Console
 from rich.prompt import Prompt, IntPrompt
-from infrainit.config.config import load_state, get_app_state, remove_app_state
+from infrainit.config.config import get_app_state, remove_app_state
 from infrainit.core.planner import Planner
 from infrainit.core.executor import Executor
-from infrainit.providers import Provider
+from infrainit.providers import Provider, ProvisionResult
 from infrainit.providers.local.provider import LocalProvider
 from infrainit.providers.proxmox.provider import ProxmoxProvider
 from infrainit.providers.azure.provider import AzureProvider
@@ -122,7 +122,6 @@ def destroy(name: str):
 
     if provider_cls:
         provider = provider_cls()
-        from infrainit.providers import ProvisionResult
         result = ProvisionResult(name=name, provider=state["provider"], endpoint=state.get("endpoint"))
         provider.destroy(result)
 

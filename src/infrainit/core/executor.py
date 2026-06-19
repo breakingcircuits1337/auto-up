@@ -1,5 +1,6 @@
 import subprocess
 import tempfile
+from datetime import datetime
 from pathlib import Path
 from infrainit.providers import Provider, ProvisionResult
 from infrainit.core.verifier import verify_result
@@ -11,18 +12,18 @@ class Executor:
         self._provider = provider
 
     def run(self, repo_url: str, plan: dict) -> ProvisionResult:
-        result = self._provider.provision(plan)
-
         with tempfile.TemporaryDirectory() as tmpdir:
             self._clone(repo_url, tmpdir)
+            plan["clone_path"] = tmpdir
             self._run_build_steps(plan.get("build_steps", []), tmpdir)
+            result = self._provider.provision(plan)
 
         ok = verify_result(result, plan)
         set_app_state(result.name, {
             "provider": self._provider.name,
             "repo": repo_url,
             "endpoint": result.endpoint,
-            "created_at": __import__("datetime").datetime.now().isoformat(),
+            "created_at": datetime.now().isoformat(),
         })
         result.metadata["verified"] = ok
         return result

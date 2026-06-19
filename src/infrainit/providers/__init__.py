@@ -12,8 +12,7 @@ class ProvisionResult:
 
 
 class Provider(ABC):
-
-    name: str
+    name: str = ""
 
     @abstractmethod
     def provision(self, plan: dict) -> ProvisionResult:

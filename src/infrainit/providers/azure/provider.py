@@ -1,7 +1,6 @@
-import subprocess
 import json
-import tempfile
-from pathlib import Path
+import subprocess
+import httpx
 from infrainit.providers import Provider, ProvisionResult
 from infrainit.config.config import require_env
 
@@ -22,7 +21,7 @@ class AzureProvider(Provider):
             f"vm create --resource-group {rg} --name {name} "
             f"--image Ubuntu2404 --size {vm_size} "
             f"--admin-username infrainit --generate-ssh-keys "
-            f"--nsg-rule-{self._nsg_rule(port)} "
+            f"--nsg-rule SSH,{self._nsg_rule(port)} "
             f"--subscription {sub}"
         )
 
@@ -39,7 +38,6 @@ class AzureProvider(Provider):
 
     def verify(self, result: ProvisionResult) -> bool:
         try:
-            import httpx
             r = httpx.get(result.endpoint, timeout=10)
             return r.is_success
         except Exception:
@@ -58,4 +56,4 @@ class AzureProvider(Provider):
 
     @staticmethod
     def _nsg_rule(port: int) -> str:
-        return f"80" if port == 80 else f"allow-{port}"
+        return "80" if port == 80 else f"{port}"

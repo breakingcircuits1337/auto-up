@@ -4,7 +4,6 @@ from pathlib import Path
 
 INFRAINIT_DIR = Path.home() / ".infrainit"
 STATE_FILE = INFRAINIT_DIR / "state.json"
-CONFIG_FILE = INFRAINIT_DIR / "config.yaml"
 
 
 def _ensure_dir():
